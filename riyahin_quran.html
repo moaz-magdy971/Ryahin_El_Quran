@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>رياحين القرآن</title>
+<style>
+  :root{
+    --primary:#1F4E79;      /* كحلي - أساسي */
+    --primary-dark:#163a5c;
+    --secondary:#B8860B;    /* ذهبي - ثانوي */
+    --secondary-dark:#9a6f08;
+    --bg:#f5f7fa;
+    --white:#ffffff;
+    --text:#333333;
+    --error:#c0392b;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    font-family:'Segoe UI', Tahoma, Arial, sans-serif;
+    background:var(--bg);
+    color:var(--text);
+    padding-top:64px;
+  }
+
+  /* ===== الهيدر ===== */
+  header.topbar{
+    position:fixed; top:0; right:0; left:0; height:64px;
+    background:var(--primary);
+    display:flex; align-items:center; justify-content:space-between;
+    padding:0 16px; z-index:1000;
+    box-shadow:0 2px 8px rgba(0,0,0,0.15);
+  }
+  header.topbar .logo-title{ color:var(--white); font-size:1.2em; font-weight:bold; }
+  #hamburgerBtn{
+    background:none; border:none; cursor:pointer; padding:8px;
+    display:flex; flex-direction:column; gap:5px;
+  }
+  #hamburgerBtn span{ display:block; width:26px; height:3px; background:var(--white); border-radius:2px; }
+
+  /* ===== القايمة الجانبية ===== */
+  #overlay{ position:fixed; inset:0; background:rgba(0,0,0,0.5); display:none; z-index:1001; }
+  #overlay.show{ display:block; }
+  #sideMenu{
+    position:fixed; top:0; right:-280px; width:260px; height:100%;
+    background:var(--white); z-index:1002;
+    transition:right 0.3s ease;
+    box-shadow:-2px 0 10px rgba(0,0,0,0.2);
+    overflow-y:auto;
+  }
+  #sideMenu.open{ right:0; }
+  #sideMenu .menu-header{
+    background:var(--primary); color:var(--white);
+    padding:20px; font-size:1.1em; font-weight:bold;
+    display:flex; justify-content:space-between; align-items:center;
+  }
+  #closeMenuBtn{ background:none; border:none; color:var(--white); font-size:1.4em; cursor:pointer; }
+  #sideMenu ul{ list-style:none; }
+  #sideMenu ul li{ border-bottom:1px solid #eee; }
+  #sideMenu ul li button{
+    width:100%; text-align:right; padding:16px 20px; background:none;
+    border:none; font-size:1em; cursor:pointer; color:var(--text);
+  }
+  #sideMenu ul li button:hover{ background:#fdf6e8; color:var(--secondary); }
+
+  /* ===== الصفحات ===== */
+  .page{ display:none; padding:24px; max-width:900px; margin:0 auto; }
+  .page.active{ display:block; }
+  .page h2{ color:var(--primary); text-align:center; margin-bottom:24px; }
+
+  /* ===== الرئيسية ===== */
+  .welcome-card{
+    background:var(--white); border-radius:16px; padding:40px 24px;
+    max-width:420px; margin:40px auto; text-align:center;
+    box-shadow:0 4px 16px rgba(0,0,0,0.1);
+  }
+  .welcome-logo{ width:100px; height:100px; border-radius:50%; object-fit:cover; margin-bottom:16px;}
+  .welcome-card h1{ color:var(--primary); margin-bottom:8px; }
+  .welcome-subtitle{ color:#666; font-style:italic; margin-bottom:20px; }
+  .start-btn, .action-btn{
+    display:inline-block; background:var(--secondary); color:white;
+    padding:12px 28px; border-radius:8px; text-decoration:none;
+    font-size:1em; border:none; cursor:pointer; transition:background 0.3s;
+  }
+  .start-btn:hover, .action-btn:hover{ background:var(--secondary-dark); }
+
+  /* ===== من نحن ===== */
+  .features{ display:flex; flex-wrap:wrap; gap:16px; justify-content:center; margin-bottom:24px; }
+  .card{
+    background:var(--white); border-radius:12px; padding:20px; width:220px;
+    box-shadow:0 4px 12px rgba(0,0,0,0.08); text-align:center;
+  }
+  .card h3{ color:var(--primary); margin-bottom:8px; }
+  .about-card{
+    background:var(--white); border-radius:12px; padding:30px; max-width:500px;
+    margin:20px auto; text-align:center; box-shadow:0 4px 12px rgba(0,0,0,0.1);
+  }
+  .whatsapp-btn{
+    display:inline-block; background:#25D366; color:white; text-decoration:none;
+    padding:12px 25px; border-radius:8px; font-size:1.1em; margin-top:15px;
+    transition:background-color 0.3s;
+  }
+  .whatsapp-btn:hover{ background:#1ebe57; }
+
+  /* ===== شعارنا ===== */
+  .brand-guide{ text-align:center; }
+  .swatches{ display:flex; justify-content:center; gap:12px; flex-wrap:wrap; margin-bottom:16px;}
+  .swatch{
+    width:140px; height:80px; display:flex; align-items:center; justify-content:center;
+    border-radius:10px; color:white; font-size:13px;
+  }
+  .swatch.primary{ background:var(--primary); }
+  .swatch.secondary{ background:var(--secondary); }
+  .tagline{ font-style:italic; color:var(--primary); }
+
+  /* ===== نموذج التسجيل ===== */
+  .form-container{
+    background:var(--white); border-radius:16px; padding:30px; max-width:480px;
+    margin:0 auto; box-shadow:0 4px 16px rgba(0,0,0,0.1);
+  }
+  .form-step{ display:none; text-align:center; }
+  .form-step.active{ display:block; }
+  .form-step h3{ color:var(--primary); margin-bottom:20px; }
+  .form-step input[type="text"], .form-step input[type="tel"], .form-step input[type="number"]{
+    width:100%; padding:12px; border:1px solid #ccc; border-radius:8px; font-size:1em; text-align:center;
+  }
+  .gender-buttons, .duration-options{ display:flex; gap:12px; justify-content:center; flex-wrap:wrap; }
+  .gender-btn, .duration-btn{
+    padding:12px 20px; border:2px solid var(--primary); background:white; color:var(--primary);
+    border-radius:8px; cursor:pointer; font-size:1em;
+  }
+  .gender-btn.selected, .duration-btn.selected{ background:var(--primary); color:white; }
+  .stepper{ display:flex; align-items:center; justify-content:center; gap:16px; }
+  .stepper button{
+    width:40px; height:40px; border-radius:50%; border:none; background:var(--primary);
+    color:white; font-size:1.4em; cursor:pointer;
+  }
+  .stepper input{ width:70px; text-align:center; padding:8px; border:1px solid #ccc; border-radius:8px; }
+  .search-results{ max-height:180px; overflow-y:auto; border:1px solid #eee; border-radius:8px; margin-top:6px; }
+  .search-item{ padding:10px; cursor:pointer; text-align:right; }
+  .search-item:hover{ background:#fdf6e8; }
+  .error-msg{ color:var(--error); font-size:0.9em; margin-top:8px; min-height:18px; }
+  .nav-buttons{ display:flex; justify-content:space-between; margin-top:24px; gap:10px; }
+  .nav-buttons button{ flex:1; padding:12px; border:none; border-radius:8px; font-size:1em; cursor:pointer; }
+  .prev-btn{ background:#ddd; color:#333; }
+  .next-btn{ background:var(--secondary); color:white; }
+  .next-btn:hover{ background:var(--secondary-dark); }
+
+  /* ===== تقدم الطالبات ===== */
+  #status{ text-align:center; color:#888; font-size:0.9em; margin-bottom:16px; }
+  .students-grid{ display:flex; flex-wrap:wrap; gap:16px; justify-content:center; }
+  .student-card{
+    background:white; border-radius:12px; padding:20px; width:220px;
+    box-shadow:0 4px 12px rgba(0,0,0,0.1); text-align:center; border-right:5px solid #ccc;
+  }
+  .student-card h3{ color:var(--primary); margin-bottom:8px; }
+  .progress-bar{ background:#e0e0e0; border-radius:8px; height:12px; margin:8px 0; }
+  .progress-fill{ height:100%; border-radius:8px; background:var(--secondary); transition:width 0.5s; }
+  .badge{ display:inline-block; padding:3px 10px; border-radius:12px; font-size:0.8em; font-weight:bold; }
+  .excellent{ background:#d5f5e3; color:#1e8449; }
+  .good{ background:#d6eaf8; color:#1a5276; }
+  .needs-work{ background:#fdedec; color:#922b21; }
+  .beginner{ border-right:5px solid var(--secondary); }
+  .intermediate{ border-right:5px solid #2980b9; }
+  .advanced{ border-right:5px solid var(--primary); }
+
+  /* ===== معرض التصاميم ===== */
+  .design-gallery .grid{ display:grid; grid-template-columns:repeat(auto-fit, minmax(220px,1fr)); gap:16px; }
+  .design-card{ border:1px solid var(--secondary); border-radius:12px; overflow:hidden; box-shadow:0 2px 8px rgba(0,0,0,0.08); }
+  .design-card img{ width:100%; display:block; }
+  .prompt-used{ font-size:13px; color:#555; padding:8px 10px; background:#FDF0E4; margin:0; }
+
+  /* ===== قائمة التحقق ===== */
+  .checklist label{
+    display:block; background:white; padding:14px 16px; border-radius:8px;
+    margin-bottom:10px; box-shadow:0 2px 6px rgba(0,0,0,0.06); text-align:right;
+  }
+  .checklist input[type="checkbox"]{ margin-left:10px; }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <button id="hamburgerBtn" onclick="toggleMenu()" aria-label="القائمة">
+    <span></span><span></span><span></span>
+  </button>
+  <div class="logo-title">رياحين القرآن</div>
+</header>
+
+<div id="overlay" onclick="toggleMenu()"></div>
+<nav id="sideMenu">
+  <div class="menu-header">
+    <span>محتويات الموقع</span>
+    <button id="closeMenuBtn" onclick="toggleMenu()">×</button>
+  </div>
+  <ul>
+    <li><button onclick="showPage('page-home')">🏠 الرئيسية</button></li>
+    <li><button onclick="showPage('page-about')">من نحن؟</button></li>
+    <li><button onclick="showPage('page-register')">سجّل الآن</button></li>
+    <li><button onclick="showPage('page-brand')">شعارنا</button></li>
+    <li><button onclick="showPage('page-progress')">تقدم الطالبات</button></li>
+    <li><button onclick="showPage('page-gallery')">معرض التصاميم</button></li>
+    <li><button onclick="showPage('page-checklist')">قائمة التحقق قبل النشر</button></li>
+    <li><a href="https://www.facebook.com/share/1KuFfGzAGH/" target="_blank" style="display:block; padding:16px 20px; color:var(--text); text-decoration:none;">صفحتنا على الفيسبوك</a></li>
+  </ul>
+</nav>
+
+<main>
+
+  <!-- ===== الرئيسية ===== -->
+  <section id="page-home" class="page active">
+    <div class="welcome-card">
+      <img src="logo.jpg" alt="شعار رياحين القرآن" class="welcome-logo">
+      <h1>رياحين القرآن</h1>
+      <p class="welcome-subtitle">نزهة الأرواح في رياض كتاب الله</p>
+      <button class="start-btn" onclick="showPage('page-register')">ابدأ التسجيل</button>
+    </div>
+  </section>
+
+  <!-- ===== من نحن ===== -->
+  <section id="page-about" class="page">
+    <h2>من نحن؟</h2>
+    <div class="features">
+      <div class="card"><h3>تدريس أونلاين</h3><p>جلسات مباشرة مع معلمة متخصصة</p></div>
+      <div class="card"><h3>متابعة مستمرة</h3><p>تقارير أسبوعية لأولياء الأمور</p></div>
+      <div class="card"><h3>لجميع الأعمار</h3><p>من الأطفال إلى الكبار</p></div>
+    </div>
+    <div class="about-card">
+      <p>أكاديمية متخصصة في تحفيظ القرآن الكريم عن بُعد</p>
+      <p>تدريس أونلاين لجميع الأعمار</p>
+      <p>للتسجيل أو الاستفسار تواصل معنا</p>
+      <a href="https://wa.me/201026602004?text=%D8%A7%D9%84%D8%B3%D9%84%D8%A7%D9%85%20%D8%B9%D9%84%D9%8A%D9%83%D9%85%D8%8C%20%D8%A3%D8%B1%D9%8A%D8%AF%20%D8%A7%D9%84%D8%A7%D8%B3%D8%AA%D9%81%D8%B3%D8%A7%D8%B1%20%D8%B9%D9%86%20%D8%A7%D9%84%D8%AA%D8%B3%D8%AC%D9%8A%D9%84%20%D9%81%D9%8A%20%D8%A7%D9%84%D8%A3%D9%83%D8%A7%D8%AF%D9%8A%D9%85%D9%8A%D8%A9"
+         target="_blank" class="whatsapp-btn">تواصل عبر واتساب</a>
+    </div>
+  </section>
+
+  <!-- ===== سجل الآن ===== -->
+  <section id="page-register" class="page">
+    <h2>سجّلي الآن في رياحين القرآن</h2>
+    <div class="form-container" id="registrationForm">
+
+      <div id="step1" class="form-step active">
+        <h3>هل الطالب ذكر أم أنثى؟</h3>
+        <div class="gender-buttons">
+          <button type="button" class="gender-btn" onclick="regSelectGender('ذكر', this)">ذكر</button>
+          <button type="button" class="gender-btn" onclick="regSelectGender('أنثى', this)">أنثى</button>
+        </div>
+        <div class="nav-buttons">
+          <button class="next-btn" onclick="regGoToStep(2)">التالي</button>
+        </div>
+      </div>
+
+      <div id="step2" class="form-step">
+        <h3 id="nameQuestion">ما اسم الطالب؟</h3>
+        <input type="text" id="nameInput" placeholder="اكتب الاسم هنا">
+        <p class="error-msg" id="nameError"></p>
+        <div class="nav-buttons">
+          <button class="prev-btn" onclick="regGoToStep(1)">السابق</button>
+          <button class="next-btn" onclick="regValidateName()">التالي</button>
+        </div>
+      </div>
+
+      <div id="step3" class="form-step">
+        <h3>كم العمر؟</h3>
+        <div class="stepper">
+          <button type="button" onclick="regChangeValue('ageInput', -1, 5, 100)">−</button>
+          <input type="number" id="ageInput" value="8" min="5" max="100">
+          <button type="button" onclick="regChangeValue('ageInput', 1, 5, 100)">+</button>
+        </div>
+        <div class="nav-buttons">
+          <button class="prev-btn" onclick="regGoToStep(2)">السابق</button>
+          <button class="next-btn" onclick="regGoToStep(4)">التالي</button>
+        </div>
+      </div>
+
+      <div id="step4" class="form-step">
+        <h3>ما الدولة؟</h3>
+        <input type="text" id="countrySearch" placeholder="اضغط للاختيار أو ابحث..." autocomplete="off" oninput="regRenderCountryResults()" onfocus="regRenderCountryResults()">
+        <div id="countryResults" class="search-results"></div>
+        <p class="error-msg" id="countryError"></p>
+        <div class="nav-buttons">
+          <button class="prev-btn" onclick="regGoToStep(3)">السابق</button>
+          <button class="next-btn" onclick="regValidateCountry()">التالي</button>
+        </div>
+      </div>
+
+      <div id="step5" class="form-step">
+        <h3>ما الجزء الذي تريد حفظه؟</h3>
+        <input type="text" id="juzSearch" placeholder="اضغط للاختيار أو ابحث..." autocomplete="off" oninput="regRenderJuzResults()" onfocus="regRenderJuzResults()">
+        <div id="juzResults" class="search-results"></div>
+        <p class="error-msg" id="juzError"></p>
+        <div class="nav-buttons">
+          <button class="prev-btn" onclick="regGoToStep(4)">السابق</button>
+          <button class="next-btn" onclick="regValidateJuz()">التالي</button>
+        </div>
+      </div>
+
+      <div id="step6" class="form-step">
+        <h3>ما السورة القادمة؟</h3>
+        <input type="text" id="surahSearch" placeholder="اضغط للاختيار أو ابحث..." autocomplete="off" oninput="regRenderSurahResults()" onfocus="regRenderSurahResults()">
+        <div id="surahResults" class="search-results"></div>
+        <p class="error-msg" id="surahError"></p>
+        <div class="nav-buttons">
+          <button class="prev-btn" onclick="regGoToStep(5)">السابق</button>
+          <button class="next-btn" onclick="regValidateSurah()">التالي</button>
+        </div>
+      </div>
+
+      <div id="step7" class="form-step">
+        <h3>كم عدد الحلقات أسبوعياً؟</h3>
+        <div class="stepper">
+          <button type="button" onclick="regChangeValue('sessionsInput', -1, 1, 5)">−</button>
+          <input type="number" id="sessionsInput" value="2" min="1" max="5">
+          <button type="button" onclick="regChangeValue('sessionsInput', 1, 1, 5)">+</button>
+        </div>
+        <div class="nav-buttons">
+          <button class="prev-btn" onclick="regGoToStep(6)">السابق</button>
+          <button class="next-btn" onclick="regGoToStep(8)">التالي</button>
+        </div>
+      </div>
+
+      <div id="step8" class="form-step">
+        <h3>ما مدة الحلقة؟</h3>
+        <div class="duration-options">
+          <button type="button" class="duration-btn" onclick="regSelectDuration('نص ساعة', this)">نص ساعة</button>
+          <button type="button" class="duration-btn" onclick="regSelectDuration('ساعة إلا ربع', this)">ساعة إلا ربع</button>
+          <button type="button" class="duration-btn" onclick="regSelectDuration('ساعة كاملة', this)">ساعة كاملة</button>
+        </div>
+        <p class="error-msg" id="durationError"></p>
+        <div class="nav-buttons">
+          <button class="prev-btn" onclick="regGoToStep(7)">السابق</button>
+          <button class="next-btn" onclick="regValidateDuration()">التالي</button>
+        </div>
+      </div>
+
+      <div id="step9" class="form-step">
+        <h3>رقم واتساب ولي الأمر</h3>
+        <input type="tel" id="phoneInput" placeholder="01xxxxxxxxx">
+        <p class="error-msg" id="phoneError"></p>
+        <div class="nav-buttons">
+          <button class="prev-btn" onclick="regGoToStep(8)">السابق</button>
+          <button class="next-btn" onclick="regSendToWhatsApp()">إرسال طلب التسجيل</button>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ===== شعارنا ===== -->
+  <section id="page-brand" class="page">
+    <div class="brand-guide">
+      <h2>هوية رياحين القرآن البصرية</h2>
+      <div class="swatches">
+        <div class="swatch primary">كحلي أساسي</div>
+        <div class="swatch secondary">ذهبي ثانوي</div>
+      </div>
+      <p class="tagline">"رياحين القرآن — حفظ بثقة، وصحبة بمحبة"</p>
+    </div>
+  </section>
+
+  <!-- ===== تقدم الطالبات ===== -->
+  <section id="page-progress" class="page">
+    <h2>تقدم طالبات الأكاديمية</h2>
+    <p id="status">جارٍ تحميل البيانات...</p>
+    <div class="students-grid" id="studentsGrid"></div>
+  </section>
+
+  <!-- ===== معرض التصاميم ===== -->
+  <section id="page-gallery" class="page">
+    <div class="design-gallery">
+      <h2>معرض تصاميم الأكاديمية 🎨</h2>
+      <div class="grid">
+        <div class="design-card">
+          <img src="designs/post1.png" alt="منشور ترحيبي">
+          <p class="prompt-used">الأمر: منشور ترحيب بطالبات جدد، ألوان كحلي وذهبي</p>
+        </div>
+        <div class="design-card">
+          <img src="designs/slide1.png" alt="شريحة عرض Gamma">
+          <p class="prompt-used">الأمر: شريحة عرض عن أهمية تحفيظ القرآن، ألوان هادئة</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== قائمة التحقق ===== -->
+  <section id="page-checklist" class="page">
+    <div class="checklist">
+      <h2>قائمة تحقق قبل نشر محتوى ديني ✅</h2>
+      <label><input type="checkbox"> هل تمت مطابقة أي آية مذكورة مع مصحف مطبوع معتمد؟</label>
+      <label><input type="checkbox"> هل تم التأكد من نسبة أي حديث لمصدره الصحيح؟</label>
+      <label><input type="checkbox"> هل راجع المحتوى شخص مؤهل غير الذي أنتجه بالـ AI؟</label>
+      <label><input type="checkbox"> هل المحتوى مُصنَّف بوضوح كـ"مساعدة AI" وليس "فتوى نهائية"؟</label>
+    </div>
+  </section>
+
+</main>
+
+<script>
+  /* =========================================================
+     التنقل العام بين الصفحات + فتح/قفل القايمة
+  ========================================================= */
+  function toggleMenu(){
+    document.getElementById('sideMenu').classList.toggle('open');
+    document.getElementById('overlay').classList.toggle('show');
+  }
+  function showPage(pageId){
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.getElementById(pageId).classList.add('active');
+    document.getElementById('sideMenu').classList.remove('open');
+    document.getElementById('overlay').classList.remove('show');
+    window.scrollTo(0,0);
+  }
+
+  /* =========================================================
+     منطق نموذج التسجيل (كله بادئة reg حتى ميتعارضش مع باقي الصفحة)
+  ========================================================= */
+  let genderValue = '';
+  let selectedCountry = '';
+  let selectedJuz = '';
+  let selectedJuzNumber = null;
+  let selectedSurah = '';
+  let durationValue = '';
+
+  const islamicCountries = ['مصر','السعودية','الإمارات','الكويت','قطر','البحرين','عمان','الأردن','لبنان','سوريا','العراق','فلسطين','اليمن','ليبيا','تونس','الجزائر','المغرب','السودان','موريتانيا','الصومال','جيبوتي','جزر القمر','تركيا','إيران','باكستان','أفغانستان','بنغلاديش','إندونيسيا','ماليزيا','بروناي','نيجيريا','السنغال','مالي','النيجر','تشاد','غينيا','أذربيجان','كازاخستان','أوزبكستان','تركمانستان','قيرغيزستان','طاجيكستان'];
+  const otherCountries = ['الولايات المتحدة','كندا','المملكة المتحدة','فرنسا','ألمانيا','إيطاليا','إسبانيا','روسيا','الصين','اليابان','الهند','البرازيل','أستراليا','جنوب أفريقيا','المكسيك','الأرجنتين','هولندا','بلجيكا','السويد','النرويج','الدنمارك','فنلندا','سويسرا','النمسا','بولندا','اليونان','البرتغال','أوكرانيا','كوريا الجنوبية','تايلاند','فيتنام','الفلبين','سنغافورة','نيوزيلندا'];
+  const allCountries = [...islamicCountries, ...otherCountries];
+
+  const juzData = {
+    1: { name: 'الجزء الأول', surahs: ['الفاتحة', 'البقرة'] },
+    2: { name: 'الجزء الثاني', surahs: ['البقرة'] },
+    3: { name: 'الجزء الثالث', surahs: ['البقرة', 'آل عمران'] },
+    4: { name: 'الجزء الرابع', surahs: ['آل عمران', 'النساء'] },
+    5: { name: 'الجزء الخامس', surahs: ['النساء'] },
+    6: { name: 'الجزء السادس', surahs: ['النساء', 'المائدة'] },
+    7: { name: 'الجزء السابع', surahs: ['المائدة', 'الأنعام'] },
+    8: { name: 'الجزء الثامن', surahs: ['الأنعام', 'الأعراف'] },
+    9: { name: 'الجزء التاسع', surahs: ['الأعراف', 'الأنفال'] },
+    10: { name: 'الجزء العاشر', surahs: ['الأنفال', 'التوبة'] },
+    11: { name: 'الجزء الحادي عشر', surahs: ['التوبة', 'يونس', 'هود'] },
+    12: { name: 'الجزء الثاني عشر', surahs: ['هود', 'يوسف'] },
+    13: { name: 'الجزء الثالث عشر', surahs: ['يوسف', 'الرعد', 'إبراهيم'] },
+    14: { name: 'الجزء الرابع عشر', surahs: ['الحجر', 'النحل'] },
+    15: { name: 'الجزء الخامس عشر', surahs: ['الإسراء', 'الكهف'] },
+    16: { name: 'الجزء السادس عشر', surahs: ['الكهف', 'مريم', 'طه'] },
+    17: { name: 'الجزء السابع عشر', surahs: ['الأنبياء', 'الحج'] },
+    18: { name: 'الجزء الثامن عشر', surahs: ['المؤمنون', 'النور', 'الفرقان'] },
+    19: { name: 'الجزء التاسع عشر', surahs: ['الفرقان', 'الشعراء', 'النمل'] },
+    20: { name: 'الجزء العشرون', surahs: ['النمل', 'القصص', 'العنكبوت'] },
+    21: { name: 'الجزء الحادي والعشرون', surahs: ['العنكبوت', 'الروم', 'لقمان', 'السجدة', 'الأحزاب'] },
+    22: { name: 'الجزء الثاني والعشرون', surahs: ['الأحزاب', 'سبأ', 'فاطر', 'يس'] },
+    23: { name: 'الجزء الثالث والعشرون', surahs: ['يس', 'الصافات', 'ص', 'الزمر'] },
+    24: { name: 'الجزء الرابع والعشرون', surahs: ['الزمر', 'غافر', 'فصلت'] },
+    25: { name: 'الجزء الخامس والعشرون', surahs: ['الشورى', 'الزخرف', 'الدخان', 'الجاثية', 'الأحقاف'] },
+    26: { name: 'الجزء السادس والعشرون', surahs: ['الأحقاف', 'محمد', 'الفتح', 'الحجرات', 'ق', 'الذاريات'] },
+    27: { name: 'الجزء السابع والعشرون', surahs: ['الذاريات', 'الطور', 'النجم', 'القمر', 'الرحمن', 'الواقعة', 'الحديد'] },
+    28: { name: 'الجزء الثامن والعشرون', surahs: ['المجادلة', 'الحشر', 'الممتحنة', 'الصف', 'الجمعة', 'المنافقون', 'التغابن', 'الطلاق', 'التحريم'] },
+    29: { name: 'الجزء التاسع والعشرون', surahs: ['الملك', 'القلم', 'الحاقة', 'المعارج', 'نوح', 'الجن', 'المزمل', 'المدثر', 'القيامة', 'الإنسان', 'المرسلات'] },
+    30: { name: 'جزء عمّ', surahs: ['النبأ', 'النازعات', 'عبس', 'التكوير', 'الانفطار', 'المطففين', 'الانشقاق', 'البروج', 'الطارق', 'الأعلى', 'الغاشية', 'الفجر', 'البلد', 'الشمس', 'الليل', 'الضحى', 'الشرح', 'التين', 'العلق', 'القدر', 'البينة', 'الزلزلة', 'العاديات', 'القارعة', 'التكاثر', 'العصر', 'الهمزة', 'الفيل', 'قريش', 'الماعون', 'الكوثر', 'الكافرون', 'النصر', 'المسد', 'الإخلاص', 'الفلق', 'الناس'] }
+  };
+
+  function regGoToStep(stepNumber) {
+    document.querySelectorAll('#page-register .form-step').forEach(step => step.classList.remove('active'));
+    document.getElementById('step' + stepNumber).classList.add('active');
+  }
+
+  function regChangeValue(inputId, amount, min, max) {
+    const input = document.getElementById(inputId);
+    let newValue = parseInt(input.value) + amount;
+    if (newValue < min) newValue = min;
+    if (newValue > max) newValue = max;
+    input.value = newValue;
+  }
+
+  function regSelectGender(value, btn) {
+    genderValue = value;
+    document.querySelectorAll('.gender-btn').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    document.getElementById('nameQuestion').textContent = value === 'ذكر' ? 'ما اسم الطالب؟' : 'ما اسم الطالبة؟';
+  }
+
+  function regValidateName() {
+    const name = document.getElementById('nameInput').value.trim();
+    const arabicOnly = /^[\u0600-\u06FF\s]+$/;
+    const errorEl = document.getElementById('nameError');
+    if (name.length < 2) { errorEl.textContent = 'الرجاء إدخال اسم صحيح'; return; }
+    if (!arabicOnly.test(name)) { errorEl.textContent = 'الرجاء الكتابة بالعربية فقط'; return; }
+    errorEl.textContent = '';
+    regGoToStep(3);
+  }
+
+  function regRenderCountryResults() {
+    const query = document.getElementById('countrySearch').value.trim();
+    const resultsBox = document.getElementById('countryResults');
+    resultsBox.innerHTML = '';
+    const matches = query.length === 0 ? allCountries : allCountries.filter(c => c.includes(query));
+    matches.slice(0, 8).forEach(c => {
+      const item = document.createElement('div');
+      item.className = 'search-item';
+      item.textContent = c;
+      item.onclick = () => {
+        selectedCountry = c;
+        document.getElementById('countrySearch').value = c;
+        resultsBox.innerHTML = '';
+      };
+      resultsBox.appendChild(item);
+    });
+  }
+
+  function regValidateCountry() {
+    const errorEl = document.getElementById('countryError');
+    if (!selectedCountry || document.getElementById('countrySearch').value !== selectedCountry) {
+      errorEl.textContent = 'الرجاء اختيار دولة من القائمة';
+      return;
+    }
+    errorEl.textContent = '';
+    regGoToStep(5);
+  }
+
+  function regRenderJuzResults() {
+    const query = document.getElementById('juzSearch').value.trim();
+    const resultsBox = document.getElementById('juzResults');
+    resultsBox.innerHTML = '';
+    const matches = query.length === 0
+      ? Object.keys(juzData)
+      : Object.keys(juzData).filter(num => num.includes(query) || juzData[num].name.includes(query));
+    matches.slice(0, 8).forEach(num => {
+      const item = document.createElement('div');
+      item.className = 'search-item';
+      item.textContent = juzData[num].name;
+      item.onclick = () => {
+        selectedJuz = juzData[num].name;
+        selectedJuzNumber = num;
+        document.getElementById('juzSearch').value = juzData[num].name;
+        resultsBox.innerHTML = '';
+      };
+      resultsBox.appendChild(item);
+    });
+  }
+
+  function regValidateJuz() {
+    const errorEl = document.getElementById('juzError');
+    if (!selectedJuz || document.getElementById('juzSearch').value !== selectedJuz) {
+      errorEl.textContent = 'الرجاء اختيار جزء من القائمة';
+      return;
+    }
+    errorEl.textContent = '';
+    selectedSurah = '';
+    document.getElementById('surahSearch').value = '';
+    regGoToStep(6);
+  }
+
+  function regRenderSurahResults() {
+    const query = document.getElementById('surahSearch').value.trim();
+    const resultsBox = document.getElementById('surahResults');
+    resultsBox.innerHTML = '';
+    if (!selectedJuzNumber) return;
+    const surahsOfJuz = juzData[selectedJuzNumber].surahs;
+    const matches = query.length === 0 ? surahsOfJuz : surahsOfJuz.filter(s => s.includes(query));
+    matches.slice(0, 8).forEach(s => {
+      const item = document.createElement('div');
+      item.className = 'search-item';
+      item.textContent = s;
+      item.onclick = () => {
+        selectedSurah = s;
+        document.getElementById('surahSearch').value = s;
+        resultsBox.innerHTML = '';
+      };
+      resultsBox.appendChild(item);
+    });
+  }
+
+  function regValidateSurah() {
+    const errorEl = document.getElementById('surahError');
+    if (!selectedSurah || document.getElementById('surahSearch').value !== selectedSurah) {
+      errorEl.textContent = 'الرجاء اختيار سورة من القائمة';
+      return;
+    }
+    errorEl.textContent = '';
+    regGoToStep(7);
+  }
+
+  function regSelectDuration(value, btn) {
+    durationValue = value;
+    document.querySelectorAll('.duration-btn').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+  }
+
+  function regValidateDuration() {
+    const errorEl = document.getElementById('durationError');
+    if (!durationValue) { errorEl.textContent = 'الرجاء اختيار مدة الحلقة'; return; }
+    errorEl.textContent = '';
+    regGoToStep(9);
+  }
+
+  function regSendToWhatsApp() {
+    const phone = document.getElementById('phoneInput').value.trim();
+    const errorEl = document.getElementById('phoneError');
+    const egyptPhonePattern = /^01[0-9]{9}$/;
+    if (!egyptPhonePattern.test(phone)) {
+      errorEl.textContent = 'الرجاء إدخال رقم صحيح (يبدأ بـ 01 ويتكون من 11 رقم)';
+      return;
+    }
+    errorEl.textContent = '';
+
+    const age = document.getElementById('ageInput').value;
+    const name = document.getElementById('nameInput').value.trim();
+    const sessions = document.getElementById('sessionsInput').value;
+
+    const message = `السلام عليكم، أرغب في التسجيل في منصة رياحين القرآن.
+📌 الاسم: ${name} (${genderValue})
+📌 العمر: ${age} سنة
+📌 الدولة: ${selectedCountry}
+📌 ما يحفظه: ${selectedJuz}
+📌 السورة القادمة: ${selectedSurah}
+📌 عدد الحلقات: ${sessions}
+📌 مدة الحلقة: ${durationValue}`;
+
+    const whatsappOwnerNumber = '201026602004';
+    const url = `https://wa.me/${whatsappOwnerNumber}?text=${encodeURIComponent(message)}`;
+    window.open(url, '_blank');
+  }
+
+  /* =========================================================
+     منطق صفحة تقدم الطالبات (كله بادئة prog)
+  ========================================================= */
+  const progFallbackStudents = [
+    {name:'سارة',  level:'مبتدئة', surahs:6,  attendance:92, last_surah:'الكوثر'},
+    {name:'نور',   level:'متوسطة', surahs:18, attendance:78, last_surah:'الملك'},
+    {name:'هدى',   level:'متقدمة', surahs:28, attendance:88, last_surah:'النبأ'},
+    {name:'ريم',   level:'مبتدئة', surahs:3,  attendance:45, last_surah:'الفاتحة'},
+  ];
+
+  function progGetAttendanceBadge(att) {
+    if (att >= 85) return '<span class="badge excellent">ممتاز</span>';
+    if (att >= 70) return '<span class="badge good">جيد</span>';
+    return '<span class="badge needs-work">يحتاج متابعة</span>';
+  }
+
+  function progGetLevelClass(level) {
+    if (level === 'مبتدئة') return 'beginner';
+    if (level === 'متوسطة') return 'intermediate';
+    if (level === 'متقدمة') return 'advanced';
+    return '';
+  }
+
+  function progRenderStudents(students) {
+    const grid = document.getElementById('studentsGrid');
+    grid.innerHTML = '';
+    students.forEach(s => {
+      const progress = Math.round((s.surahs / 114) * 100);
+      grid.innerHTML += `
+        <div class='student-card ${progGetLevelClass(s.level)}'>
+          <h3>${s.name}</h3>
+          <p style='color:#888;font-size:0.9em'>${s.level}</p>
+          <p>السور المحفوظة: <strong>${s.surahs}</strong> / 114</p>
+          <div class='progress-bar'>
+            <div class='progress-fill' style='width:${progress}%'></div>
+          </div>
+          <p style='font-size:0.85em'>آخر سورة: ${s.last_surah || '—'}</p>
+          <p>الحضور: ${s.attendance}% ${progGetAttendanceBadge(s.attendance)}</p>
+        </div>`;
+    });
+  }
+
+  fetch('students_data.json')
+    .then(res => {
+      if (!res.ok) throw new Error('الملف غير موجود');
+      return res.json();
+    })
+    .then(students => {
+      document.getElementById('status').textContent =
+        `تم تحميل بيانات ${students.length} طالبة من students_data.json`;
+      progRenderStudents(students);
+    })
+    .catch(() => {
+      document.getElementById('status').textContent =
+        'تعذّر تحميل students_data.json — يتم عرض بيانات تجريبية';
+      progRenderStudents(progFallbackStudents);
+    });
+</script>
+</body>
+</html>
